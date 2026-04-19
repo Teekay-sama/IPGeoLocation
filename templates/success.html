@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submission Successful</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 14px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    a {
+      color: #7dd3fc;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Submission recorded</h2>
+    <p><strong>Name:</strong> {{ visitor_name }}</p>
+    <p><strong>IP Address:</strong> {{ ip_address }}</p>
+    <p>Your details have been recorded successfully.</p>
+    <p><a href="/">Go back</a></p>
+  </div>
+</body>
+</html>

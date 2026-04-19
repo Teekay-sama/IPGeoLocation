@@ -1,55 +1,102 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, render_template, request, redirect, url_for, flash
+import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = "change-this-secret-key"
 
-HTML = """
-<!doctype html>
-<html>
-<head>
-    <title>IP Awareness Demo</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .box {
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            background: #f8f8f8;
-        }
-        code {
-            background: #eee;
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Internet Safety Demo</h1>
-    <div class="box">
-        <p><strong>Notice:</strong> This page logs your IP address for cybersecurity awareness training.</p>
-        <p>Your detected IP is: <code>{{ ip }}</code></p>
-        <p>This shows that websites you visit can often see your IP address automatically.</p>
-    </div>
-</body>
-</html>
-"""
+DB_NAME = "visitors.db"
 
-@app.route("/")
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS visitors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visitor_name TEXT,
+            ip_address TEXT NOT NULL,
+            user_agent TEXT,
+            consent_given INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def save_visitor(visitor_name, ip_address, user_agent, consent_given):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO visitors (visitor_name, ip_address, user_agent, consent_given, created_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        visitor_name,
+        ip_address,
+        user_agent,
+        1 if consent_given else 0,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_visitors():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT id, visitor_name, ip_address, user_agent, consent_given, created_at
+        FROM visitors
+        ORDER BY id DESC
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_client_ip():
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.remote_addr or "Unknown"
+
+
+@app.route("/", methods=["GET"])
 def home():
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    ip = forwarded.split(",")[0].strip() if forwarded else request.remote_addr
+    return render_template("index.html")
 
-    with open("ip_log.txt", "a", encoding="utf-8") as f:
-        f.write(f"{datetime.now()} | IP: {ip} | User-Agent: {request.headers.get('User-Agent')}\n")
 
-    return render_template_string(HTML, ip=ip)
+@app.route("/submit", methods=["POST"])
+def submit():
+    visitor_name = request.form.get("visitor_name", "").strip()
+    consent = request.form.get("consent")
+    consent_given = consent == "yes"
+
+    if not consent_given:
+        flash("You must give consent before proceeding.")
+        return redirect(url_for("home"))
+
+    ip_address = get_client_ip()
+    user_agent = request.headers.get("User-Agent", "Unknown")
+
+    if not visitor_name:
+        visitor_name = "Anonymous"
+
+    save_visitor(visitor_name, ip_address, user_agent, consent_given)
+    return render_template(
+        "success.html",
+        visitor_name=visitor_name,
+        ip_address=ip_address
+    )
+
+
+@app.route("/visitors", methods=["GET"])
+def visitors():
+    rows = get_visitors()
+    return render_template("visitors.html", visitors=rows)
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    init_db()
+    app.run(host="0.0.0.0", port=5000, debug=True)

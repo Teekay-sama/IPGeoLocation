@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IP Research Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 650px;
+      margin: 50px auto;
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    .notice {
+      background: #162033;
+      border-left: 4px solid #38bdf8;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+    .checkbox-wrap {
+      margin-top: 16px;
+      padding: 12px;
+      background: #162033;
+      border-radius: 8px;
+    }
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 13px;
+      background: #38bdf8;
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #7dd3fc;
+    }
+    .flash {
+      background: #7f1d1d;
+      color: #fecaca;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .small {
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-top: 10px;
+    }
+    a {
+      color: #7dd3fc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>IP Research Demo</h1>
+
+    <div class="notice">
+      This page is for a transparent classroom/research demonstration.
+      If you continue, the site will record your submitted name, IP address, visit time, and browser information.
+      Please proceed only if you agree.
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form action="/submit" method="POST">
+      
+      <!-- NAME INPUT DIV: this section collects the visitor's name -->
+      <label for="visitor_name">Your Name</label>
+      <input
+        type="text"
+        id="visitor_name"
+        name="visitor_name"
+        placeholder="Enter your name"
+      >
+
+      <!-- CONSENT SECTION DIV: this section asks the visitor to authorize submission -->
+      <div class="checkbox-wrap">
+        <label>
+          <input type="checkbox" name="consent" value="yes">
+          I understand that my name, IP address, visit time, and browser information will be recorded for this demo.
+        </label>
+      </div>
+
+      <!-- SUBMIT BUTTON DIV: this is the proceed / accept / authorize button -->
+      <button type="submit">Proceed / Accept / Authorize</button>
+
+      <p class="small">
+        Admin view: <a href="/visitors">See recorded visitors</a>
+      </p>
+    </form>
+  </div>
+</body>
+</html>
